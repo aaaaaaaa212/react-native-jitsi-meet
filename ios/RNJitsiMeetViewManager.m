@@ -4,6 +4,7 @@
 
 @implementation RNJitsiMeetViewManager{
     RNJitsiMeetView *jitsiMeetView;
+    BOOL isProfileLoaded;
 }
 
 RCT_EXPORT_MODULE(RNJitsiMeetView)
@@ -12,8 +13,14 @@ RCT_EXPORT_VIEW_PROPERTY(onConferenceTerminated, RCTBubblingEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onConferenceWillJoin, RCTBubblingEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onEnteredPip, RCTBubblingEventBlock)
 
+
 - (UIView *)view
 {
+  if (jitsiMeetView != nil) {
+    return jitsiMeetView;  
+  }
+
+  isProfileLoaded = NO;
   jitsiMeetView = [[RNJitsiMeetView alloc] init];
   jitsiMeetView.delegate = self;
   return jitsiMeetView;
@@ -45,13 +52,19 @@ RCT_EXPORT_METHOD(call:(NSString *)urlString userInfo:(NSDictionary *)userInfo)
             builder.room = urlString;
             builder.userInfo = _userInfo;
         }];
-        [jitsiMeetView join:options];
+
+        if(isProfileLoaded == NO) {
+          isProfileLoaded = YES;
+          [jitsiMeetView join:options];
+        }
+        
     });
 }
 
 RCT_EXPORT_METHOD(audioCall:(NSString *)urlString userInfo:(NSDictionary *)userInfo)
 {
     RCTLogInfo(@"Load Audio only URL %@", urlString);
+    
     JitsiMeetUserInfo * _userInfo = [[JitsiMeetUserInfo alloc] init];
     if (userInfo != NULL) {
       if (userInfo[@"displayName"] != NULL) {
@@ -65,13 +78,20 @@ RCT_EXPORT_METHOD(audioCall:(NSString *)urlString userInfo:(NSDictionary *)userI
         _userInfo.avatar = url;
       }
     }
+    
     dispatch_sync(dispatch_get_main_queue(), ^{
+
         JitsiMeetConferenceOptions *options = [JitsiMeetConferenceOptions fromBuilder:^(JitsiMeetConferenceOptionsBuilder *builder) {        
             builder.room = urlString;
             builder.userInfo = _userInfo;
             builder.audioOnly = YES;
+         //   [builder setFeatureFlag:@"add-people.enabled" withBoolean:NO];
+           // [builder setFeatureFlag:@"add-people.enabled" withBoolean:[[meetFeatureFlags objectForKey:@"add-people.enabled"] boolValue]];
         }];
-        [jitsiMeetView join:options];
+        if(isProfileLoaded == NO) {
+          isProfileLoaded = YES;
+          [jitsiMeetView join:options];
+        }
     });
 }
 
@@ -95,10 +115,10 @@ RCT_EXPORT_METHOD(endCall)
 
 - (void)conferenceTerminated:(NSDictionary *)data {
     RCTLogInfo(@"Conference terminated");
+    isProfileLoaded = NO;
     if (!jitsiMeetView.onConferenceTerminated) {
         return;
     }
-
     jitsiMeetView.onConferenceTerminated(data);
 }
 
