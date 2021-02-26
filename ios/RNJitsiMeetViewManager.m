@@ -55,7 +55,7 @@ RCT_EXPORT_METHOD(call:(NSString *)urlString userInfo:(NSDictionary *)userInfo)
 
         if(isProfileLoaded == NO) {
           isProfileLoaded = YES;
-          [jitsiMeetView join:options];
+         [jitsiMeetView join:options];
         }
         
     });
@@ -120,6 +120,7 @@ RCT_EXPORT_METHOD(endCall)
         return;
     }
     jitsiMeetView.onConferenceTerminated(data);
+    jitsiMeetView = nil;
 }
 
 - (void)conferenceWillJoin:(NSDictionary *)data {
@@ -127,7 +128,6 @@ RCT_EXPORT_METHOD(endCall)
     if (!jitsiMeetView.onConferenceWillJoin) {
         return;
     }
-
     jitsiMeetView.onConferenceWillJoin(data);
 }
 
