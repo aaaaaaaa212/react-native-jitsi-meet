@@ -59,6 +59,7 @@ public class RNJitsiMeetViewManager extends SimpleViewManager<RNJitsiMeetView> i
                 mJitsiMeetViewReference.getJitsiMeetView().getId(),
                 "conferenceTerminated",
                 event);
+        mJitsiMeetViewReference.setJitsiMeetView(null);
     }
 
     public void onConferenceWillJoin(Map<String, Object> data) {
